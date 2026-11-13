@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Simulador Estadístico I</title>
+    <link rel="stylesheet" href="./css/estilos.css">
+</head>
+<body>
+
+<div class="app">
+    <aside class="sidebar">
+        <div class="marca">
+            <div class="marca-icono">Σ</div>
+            <div>
+                <strong>ESTADÍSTICA I</strong>
+                <small>Proyecto Final</small>
+            </div>
+        </div>
+
+        <p class="menu-label">NAVEGACIÓN</p>
+        <nav id="menu">
+            <button class="nav-btn activo"
+                    data-ejercicio="0">
+                Panel principal
+            </button>
+        </nav>
+
+        <div class="sidebar-pie">
+            Ingeniería en Sistemas
+            <small>Simulación y probabilidad</small>
+        </div>
+    </aside>
+
+    <div class="contenido">
+        <header class="topbar">
+            <div>
+                <h1>Simulador Estadístico</h1>
+                <p>Distribuciones y aplicaciones en sistemas</p>
+            </div>
+            <span class="etiqueta">Estadística I</span>
+        </header>
+
+        <main>
+            <section id="inicio">
+                <div class="bienvenida">
+                    <h2>Panel principal</h2>
+                    <p>
+                        Resuelve y comprueba los ocho ejercicios
+                        de la guía final de Estadística I.
+                    </p>
+                </div>
+
+                <div class="indicadores">
+                    <div class="indicador">
+                        <span>Ejercicios</span>
+                        <strong>8</strong>
+                    </div>
+                    <div class="indicador">
+                        <span>Distribuciones</span>
+                        <strong>4</strong>
+                    </div>
+                    <div class="indicador">
+                        <span>Para explicar en video</span>
+                        <strong>3</strong>
+                    </div>
+                </div>
+
+                <h2>Ejercicios disponibles</h2>
+                <div id="tarjetas" class="tarjetas"></div>
+
+                <section class="panel">
+                    <h2>Documentación del proyecto</h2>
+                    <p>
+                        Archivos requeridos para la entrega final.
+                    </p>
+                    <div class="enlaces">
+                        <a href="./documentos/soluciones.pdf"
+                           target="_blank">
+                            Ver soluciones manuscritas
+                        </a>
+                        <a id="enlace-video" href="#"
+                           class="inactivo"
+                           aria-disabled="true">
+                            Video explicativo (pendiente)
+                        </a>
+                    </div>
+                    <p class="ayuda">
+                        Cuando tengas el PDF, guárdalo como
+                        soluciones.pdf dentro de documentos.
+                        El enlace del video se configurará
+                        cuando esté publicado.
+                    </p>
+                </section>
+            </section>
+
+            <section id="vista-ejercicio" class="oculto">
+                <button id="volver" class="volver">
+                    ← Regresar al panel
+                </button>
+
+                <div class="panel">
+                    <span id="tipo" class="etiqueta"></span>
+                    <h2 id="titulo"></h2>
+                    <p id="enunciado"></p>
+
+                    <h3>Datos del problema</h3>
+                    <div id="formulario" class="formulario"></div>
+
+                    <button id="calcular" class="boton">
+                        Calcular probabilidades
+                    </button>
+                </div>
+
+                <section class="panel">
+                    <h3>Procedimiento y resultados</h3>
+                    <div id="resultados"></div>
+                </section>
+
+                <section class="panel">
+                    <h3>Gráfica estadística</h3>
+                    <p id="descripcion-grafica"></p>
+                    <div class="grafica">
+                        <canvas id="grafico"
+                                width="850" height="330">
+                        </canvas>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h3>Simulación de probabilidades</h3>
+                    <p>
+                        El simulador realiza 10,000 experimentos
+                        aleatorios y compara la probabilidad
+                        observada con la probabilidad teórica.
+                    </p>
+                    <button id="simular" class="boton secundario">
+                        Ejecutar 10,000 simulaciones
+                    </button>
+                    <div id="resultado-simulacion"></div>
+                </section>
+            </section>
+        </main>
+
+        <footer>
+            Proyecto Final de Estadística I
+            · Ingeniería en Sistemas
+        </footer>
+    </div>
+</div>
+
+<script src="./js/app.js"></script>
+</body>
+</html>
