@@ -72,7 +72,7 @@
 
                     <div class="indicador">
                         <span>Distribuciones</span>
-                        <strong>4</strong>
+                        <strong>5</strong>
                     </div>
 
                     <div class="indicador">
@@ -221,6 +221,113 @@
                 </section>
 
             </section>
+
+
+<!-- ===================================== -->
+<!-- MÓDULO CALCULADORA ESTADÍSTICA -->
+<!-- ===================================== -->
+
+<section id="vista-calculadora" class="oculto">
+
+    <div class="bienvenida">
+        <h2>Calculadora Estadística</h2>
+        <p>
+            Herramienta para calcular probabilidades
+            mediante diferentes distribuciones estadísticas.
+        </p>
+    </div>
+
+    <div class="panel">
+
+        <h3>1. Seleccionar distribución</h3>
+
+        <label for="calc-distribucion">
+            Distribución estadística
+        </label>
+
+        <select id="calc-distribucion"
+                class="calc-select">
+
+            <option value="binomial">
+                Distribución binomial
+            </option>
+
+            <option value="negativa">
+                Distribución binomial negativa
+            </option>
+
+            <option value="poisson">
+                Distribución de Poisson
+            </option>
+
+            <option value="exponencial">
+                Distribución exponencial
+            </option>
+
+            <option value="normal">
+                Distribución normal
+            </option>
+
+        </select>
+
+        <h3>2. Ingresar parámetros</h3>
+
+        <div id="calc-parametros"
+             class="formulario">
+        </div>
+
+        <h3>3. Seleccionar operación</h3>
+
+        <select id="calc-operacion"
+                class="calc-select">
+        </select>
+
+        <div id="calc-valores"
+             class="formulario">
+        </div>
+
+        <button id="calc-boton"
+                type="button"
+                class="boton">
+            Calcular probabilidad
+        </button>
+
+    </div>
+
+    <!-- RESULTADOS -->
+
+    <div class="panel">
+
+        <h3>Resultado estadístico</h3>
+
+        <div id="calc-resultado">
+            Selecciona los datos y presiona calcular.
+        </div>
+
+    </div>
+
+    <!-- GRÁFICA -->
+
+    <div class="panel">
+
+        <h3>Gráfica de la distribución</h3>
+
+        <p>
+            Representación gráfica de la
+            distribución seleccionada.
+        </p>
+
+        <div class="grafica">
+            <canvas id="calc-grafico"
+                    width="850"
+                    height="330">
+            </canvas>
+        </div>
+
+    </div>
+
+</section>
+
 
         </main>
 
