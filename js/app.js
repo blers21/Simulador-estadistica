@@ -1079,6 +1079,8 @@ elemento("simular").addEventListener(
 
 function abrirEjercicio(id) {
     ejercicioActual = id;
+    // Ocultar calculadora al abrir otro apartado
+elemento("vista-calculadora").classList.add("oculto");
     elemento("vista-documentacion").classList.add("oculto");
 
     elemento("inicio").classList.toggle(
@@ -1277,8 +1279,8 @@ function calcular() {
 // 14. DIBUJAR GRÁFICAS EN CANVAS
 // =====================================================
 
-function dibujarGrafica(datos) {
-    const canvas = elemento("grafico");
+    function dibujarGrafica(datos, idCanvas = "grafico") {
+    const canvas = elemento(idCanvas);
     const ctx = canvas.getContext("2d");
 
     const ancho = canvas.width;
@@ -1448,3 +1450,750 @@ abrirEjercicio(0);
 console.log(
     "Simulador Estadístico I: sistema iniciado."
 );
+
+
+// =====================================================
+// MÓDULO: CALCULADORA ESTADÍSTICA GENERAL
+// =====================================================
+
+// Configuración de las distribuciones
+
+const configCalculadora = {
+
+    binomial: {
+        campos: [
+            ["n", "Número de ensayos (n)", 18, 1, 100],
+            ["p", "Probabilidad de éxito (%)", 12, 0, 100]
+        ]
+    },
+
+    negativa: {
+        campos: [
+            ["r", "Éxitos requeridos (r)", 5, 1, 40],
+            ["p", "Probabilidad de éxito (%)", 75, 0.01, 100]
+        ]
+    },
+
+    poisson: {
+        campos: [
+            ["lambda", "Promedio de eventos (λ)", 12, 0, 80]
+        ]
+    },
+
+    exponencial: {
+        campos: [
+            ["lambda", "Tasa por unidad de tiempo (λ)", 0.2, 0.001, 100]
+        ]
+    },
+
+    normal: {
+        campos: [
+            ["mu", "Media (μ)", 240, -100000, 100000],
+            ["sigma", "Desviación estándar (σ)", 35, 0.001, 100000]
+        ]
+    }
+};
+
+// -----------------------------------------------------
+// CREAR BOTÓN EN MENÚ LATERAL
+// -----------------------------------------------------
+
+const botonCalculadora = document.createElement("button");
+
+botonCalculadora.type = "button";
+botonCalculadora.className = "nav-btn";
+botonCalculadora.textContent = "▦ Calculadora";
+botonCalculadora.dataset.vista = "calculadora";
+
+// Insertar antes de Documentación, si existe
+
+const botonDocs = menu.querySelector(
+    '[data-vista="documentacion"]'
+);
+
+if (botonDocs) {
+    botonDocs.before(botonCalculadora);
+} else {
+    menu.appendChild(botonCalculadora);
+}
+
+// -----------------------------------------------------
+// ABRIR CALCULADORA
+// -----------------------------------------------------
+
+function abrirCalculadora() {
+
+    elemento("inicio").classList.add("oculto");
+
+    elemento("vista-ejercicio").classList.add("oculto");
+
+    const documentos = elemento("vista-documentacion");
+
+    if (documentos) {
+        documentos.classList.add("oculto");
+    }
+
+    elemento("vista-calculadora")
+        .classList.remove("oculto");
+
+    document.querySelectorAll(".nav-btn").forEach(b => {
+        b.classList.remove("activo");
+    });
+
+    botonCalculadora.classList.add("activo");
+
+    window.scrollTo(0, 0);
+}
+
+botonCalculadora.addEventListener(
+    "click",
+    abrirCalculadora
+);
+
+// Si existe el módulo de documentación,
+// ocultar la calculadora al abrirlo.
+
+menu.addEventListener("click", evento => {
+
+    if (evento.target.closest(
+        '[data-vista="documentacion"]'
+    )) {
+        elemento("vista-calculadora")
+            .classList.add("oculto");
+    }
+
+}, true);
+
+// -----------------------------------------------------
+// CREAR CAMPOS DE ENTRADA
+// -----------------------------------------------------
+
+function crearCampoCalc(id, titulo, valor, min, max, entero = false) {
+
+    const label = document.createElement("label");
+
+    label.textContent = titulo;
+
+    const input = document.createElement("input");
+
+    input.type = "number";
+    input.id = id;
+    input.value = valor;
+    input.min = min;
+    input.max = max;
+    input.step = entero ? "1" : "any";
+
+    label.appendChild(input);
+
+    return label;
+}
+
+// -----------------------------------------------------
+// CAMBIAR DISTRIBUCIÓN
+// -----------------------------------------------------
+
+function actualizarCalculadora() {
+
+    const tipo = elemento("calc-distribucion").value;
+
+    const config = configCalculadora[tipo];
+
+    const contenedor = elemento("calc-parametros");
+
+    contenedor.replaceChildren();
+
+    config.campos.forEach(campo => {
+
+        const [clave, titulo, valor, min, max] = campo;
+
+        contenedor.appendChild(
+            crearCampoCalc(
+                "calc-" + clave,
+                titulo,
+                valor,
+                min,
+                max,
+                clave === "n" || clave === "r"
+            )
+        );
+    });
+
+    const operaciones = elemento("calc-operacion");
+
+    operaciones.replaceChildren();
+
+    const discretas = [
+        ["igual", "Exactamente k: P(X = k)"],
+        ["hasta", "Como máximo k: P(X ≤ k)"],
+        ["desde", "Al menos k: P(X ≥ k)"],
+        ["entre", "Entre dos valores: P(a ≤ X ≤ b)"]
+    ];
+
+    const continuas = [
+        ["hasta", "Menor que X: P(X ≤ x)"],
+        ["desde", "Mayor que X: P(X ≥ x)"],
+        ["entre", "Entre dos valores: P(a < X < b)"],
+        ["percentil", "Calcular un percentil"]
+    ];
+
+    const opciones = ["exponencial", "normal"].includes(tipo)
+        ? continuas
+        : discretas;
+
+    opciones.forEach(([valor, texto]) => {
+
+        const opcion = document.createElement("option");
+
+        opcion.value = valor;
+        opcion.textContent = texto;
+
+        operaciones.appendChild(opcion);
+    });
+
+    actualizarValoresCalc();
+}
+
+// -----------------------------------------------------
+// CAMPOS SEGÚN LA OPERACIÓN
+// -----------------------------------------------------
+
+function actualizarValoresCalc() {
+
+    const tipo = elemento("calc-distribucion").value;
+    const operacion = elemento("calc-operacion").value;
+
+    const contenedor = elemento("calc-valores");
+
+    contenedor.replaceChildren();
+
+    const discreta = !["exponencial", "normal"].includes(tipo);
+
+    if (operacion === "percentil") {
+
+        contenedor.appendChild(
+            crearCampoCalc(
+                "calc-nivel",
+                "Percentil (%)",
+                95,
+                0.01,
+                99.99
+            )
+        );
+
+        return;
+    }
+
+    if (operacion === "entre") {
+
+        contenedor.appendChild(
+            crearCampoCalc(
+                "calc-a",
+                "Límite inferior (a)",
+                discreta ? 2 : 3,
+                discreta || tipo === "exponencial" ? 0 : -100000,
+                100000,
+                discreta
+            )
+        );
+
+        contenedor.appendChild(
+            crearCampoCalc(
+                "calc-b",
+                "Límite superior (b)",
+                discreta ? 8 : 8,
+                discreta || tipo === "exponencial" ? 0 : -100000,
+                100000,
+                discreta
+            )
+        );
+
+        return;
+    }
+
+    contenedor.appendChild(
+        crearCampoCalc(
+            "calc-x",
+            discreta ? "Valor de k" : "Valor de X",
+            discreta ? 3 : (tipo === "normal" ? 300 : 4),
+            discreta || tipo === "exponencial" ? 0 : -100000,
+            100000,
+            discreta
+        )
+    );
+}
+
+// -----------------------------------------------------
+// LEER Y VALIDAR NÚMEROS
+// -----------------------------------------------------
+
+function obtenerNumeroCalc(id, min, max, entero = false) {
+
+    const input = elemento(id);
+
+    if (!input || input.value.trim() === "") {
+        throw new Error("Completa todos los campos.");
+    }
+
+    const valor = Number(input.value);
+
+    if (
+        !Number.isFinite(valor) ||
+        valor < min ||
+        valor > max ||
+        (entero && !Number.isInteger(valor))
+    ) {
+        throw new Error(
+            "Revisa el valor ingresado en: " +
+            input.closest("label").firstChild.textContent.trim()
+        );
+    }
+
+    return valor;
+}
+
+// -----------------------------------------------------
+// FUNCIÓN INVERSA DE LA NORMAL
+// -----------------------------------------------------
+
+function inversaNormal(probabilidad, mu, sigma) {
+
+    let inferior = mu - 10 * sigma;
+    let superior = mu + 10 * sigma;
+
+    for (let i = 0; i < 100; i++) {
+
+        const medio = (inferior + superior) / 2;
+
+        if (normalAcumulada(medio, mu, sigma) <
+            probabilidad) {
+            inferior = medio;
+        } else {
+            superior = medio;
+        }
+    }
+
+    return (inferior + superior) / 2;
+}
+
+// -----------------------------------------------------
+// CALCULAR PROBABILIDAD
+// -----------------------------------------------------
+
+function calcularGeneral() {
+
+    const salida = elemento("calc-resultado");
+
+    try {
+
+        const tipo = elemento("calc-distribucion").value;
+
+        const operacion = elemento("calc-operacion").value;
+
+        const configuracion = configCalculadora[tipo];
+
+        const datos = {};
+
+        configuracion.campos.forEach(campo => {
+
+            const [clave, titulo, defecto, min, max] = campo;
+
+            datos[clave] = obtenerNumeroCalc(
+                "calc-" + clave,
+                min,
+                max,
+                clave === "n" || clave === "r"
+            );
+        });
+
+        const discreta = !["exponencial", "normal"].includes(tipo);
+
+        let x = null;
+        let a = null;
+        let b = null;
+        let nivel = null;
+
+        const minimoX =
+            tipo === "normal" ? -100000 : 0;
+
+        if (operacion === "entre") {
+
+            a = obtenerNumeroCalc(
+                "calc-a", minimoX, 100000, discreta
+            );
+
+            b = obtenerNumeroCalc(
+                "calc-b", minimoX, 100000, discreta
+            );
+
+            if (b < a) {
+                throw new Error(
+                    "El límite superior debe ser mayor " +
+                    "o igual que el inferior."
+                );
+            }
+
+        } else if (operacion === "percentil") {
+
+            nivel = obtenerNumeroCalc(
+                "calc-nivel", 0.01, 99.99
+            ) / 100;
+
+        } else {
+
+            x = obtenerNumeroCalc(
+                "calc-x", minimoX, 100000, discreta
+            );
+        }
+
+        let resultado = 0;
+        let formula = "";
+        let sustitucion = "";
+        let titulo = "";
+        let unidad = "%";
+
+        // Distribuciones discretas
+
+        if (discreta) {
+
+            let f;
+            let F;
+            let formulaBase;
+
+            if (tipo === "binomial") {
+
+                const n = datos.n;
+                const p = datos.p / 100;
+
+                f = k => binomial(n, k, p);
+
+                F = k => binomialAcumulada(n, k, p);
+
+                formulaBase =
+                    "C(n,k) × p^k × (1-p)^(n-k)";
+
+                sustitucion =
+                    `n=${n}, p=${p.toFixed(4)}`;
+
+            } else if (tipo === "negativa") {
+
+                const r = datos.r;
+                const p = datos.p / 100;
+
+                f = k => binomialNegativa(r, k, p);
+
+                F = k => negativaAcumulada(r, k, p);
+
+                formulaBase =
+                    "C(k-1,r-1) × p^r × (1-p)^(k-r)";
+
+                sustitucion =
+                    `r=${r}, p=${p.toFixed(4)}`;
+
+            } else {
+
+                const lambda = datos.lambda;
+
+                f = k => poisson(k, lambda);
+
+                F = k => poissonAcumulada(k, lambda);
+
+                formulaBase =
+                    "e^(-λ) × λ^k / k!";
+
+                sustitucion =
+                    `λ=${lambda}`;
+            }
+
+            if (operacion === "igual") {
+
+                resultado = f(x);
+
+                titulo = `P(X = ${x})`;
+
+                formula = formulaBase;
+
+                sustitucion += `, k=${x}`;
+
+            } else if (operacion === "hasta") {
+
+                resultado = F(x);
+
+                titulo = `P(X ≤ ${x})`;
+
+                formula = "P(X≤k) = Σ P(X=i), desde i=0 hasta k";
+
+                sustitucion += `, k=${x}`;
+
+            } else if (operacion === "desde") {
+
+                resultado = 1 - F(x - 1);
+
+                titulo = `P(X ≥ ${x})`;
+
+                formula = "P(X≥k) = 1 - P(X≤k-1)";
+
+                sustitucion += `, k=${x}`;
+
+            } else {
+
+                resultado = F(b) - F(a - 1);
+
+                titulo = `P(${a} ≤ X ≤ ${b})`;
+
+                formula = "P(a≤X≤b) = F(b) - F(a-1)";
+
+                sustitucion += `, a=${a}, b=${b}`;
+            }
+
+        } else {
+
+            // Distribuciones continuas
+
+            let F;
+            let formulaBase;
+
+            if (tipo === "exponencial") {
+
+                const lambda = datos.lambda;
+
+                F = t => t < 0
+                    ? 0
+                    : exponencialAcumulada(t, lambda);
+
+                formulaBase = "F(t) = 1 - e^(-λt)";
+
+                sustitucion = `λ=${lambda}`;
+
+            } else {
+
+                const mu = datos.mu;
+                const sigma = datos.sigma;
+
+                F = t => normalAcumulada(t, mu, sigma);
+
+                formulaBase = "Z = (X-μ)/σ";
+
+                sustitucion = `μ=${mu}, σ=${sigma}`;
+            }
+
+            if (operacion === "hasta") {
+
+                resultado = F(x);
+
+                titulo = `P(X ≤ ${x})`;
+
+                formula = formulaBase;
+
+                sustitucion += `, X=${x}`;
+
+            } else if (operacion === "desde") {
+
+                resultado = 1 - F(x);
+
+                titulo = `P(X ≥ ${x})`;
+
+                formula = "P(X≥x) = 1 - F(x)";
+
+                sustitucion += `, X=${x}`;
+
+            } else if (operacion === "entre") {
+
+                resultado = F(b) - F(a);
+
+                titulo = `P(${a} < X < ${b})`;
+
+                formula = "P(a<X<b) = F(b) - F(a)";
+
+                sustitucion += `, a=${a}, b=${b}`;
+
+            } else {
+
+                if (tipo === "exponencial") {
+
+                    resultado =
+                        -Math.log(1 - nivel) / datos.lambda;
+
+                    formula = "t = -ln(1-q)/λ";
+
+                    unidad = " unidades de tiempo";
+
+                } else {
+
+                    resultado = inversaNormal(
+                        nivel,
+                        datos.mu,
+                        datos.sigma
+                    );
+
+                    formula = "X = μ + Zq × σ";
+
+                    unidad = " unidades de X";
+                }
+
+                titulo =
+                    `Percentil ${(nivel * 100).toFixed(2)}`;
+
+                sustitucion +=
+                    `, probabilidad acumulada=${nivel}`;
+            }
+        }
+
+        if (unidad === "%") {
+            resultado = Math.max(
+                0,
+                Math.min(1, resultado)
+            );
+        }
+
+        // Mostrar resultados
+
+        const tarjeta = document.createElement("div");
+        tarjeta.className = "calc-respuesta";
+
+        const h4 = document.createElement("h4");
+        h4.textContent = titulo;
+
+        const valor = document.createElement("strong");
+
+        valor.textContent = unidad === "%"
+            ? porcentaje(resultado)
+            : resultado.toFixed(6) + unidad;
+
+        const f = document.createElement("div");
+        f.className = "calc-formula";
+        f.textContent = "Fórmula: " + formula;
+
+        const s = document.createElement("p");
+        s.textContent = "Sustitución: " + sustitucion;
+
+        const interpretacion = document.createElement("p");
+
+        interpretacion.textContent =
+            unidad === "%"
+                ? "La probabilidad del evento es " +
+                  porcentaje(resultado) + "."
+                : "Este es el valor correspondiente " +
+                  "al percentil solicitado.";
+
+        tarjeta.append(h4, f, s, valor, interpretacion);
+
+        salida.replaceChildren(tarjeta);
+
+        generarGraficaCalc(tipo, datos);
+
+    } catch (error) {
+
+        salida.textContent = error.message;
+    }
+}
+
+// -----------------------------------------------------
+// GENERAR GRÁFICA DE LA CALCULADORA
+// -----------------------------------------------------
+
+function generarGraficaCalc(tipo, v) {
+
+    const puntos = [];
+
+    if (tipo === "binomial") {
+
+        const p = v.p / 100;
+
+        for (let k = 0; k <= v.n; k++) {
+            puntos.push({
+                x: k,
+                y: binomial(v.n, k, p)
+            });
+        }
+
+    } else if (tipo === "negativa") {
+
+        const p = v.p / 100;
+
+        for (let k = v.r; k <= v.r + 50; k++) {
+            puntos.push({
+                x: k,
+                y: binomialNegativa(v.r, k, p)
+            });
+        }
+
+    } else if (tipo === "poisson") {
+
+        const lambda = v.lambda;
+
+        const max = Math.min(
+            140,
+            Math.max(
+                20,
+                Math.ceil(lambda + 4 * Math.sqrt(lambda))
+            )
+        );
+
+        for (let k = 0; k <= max; k++) {
+            puntos.push({
+                x: k,
+                y: poisson(k, lambda)
+            });
+        }
+
+    } else if (tipo === "exponencial") {
+
+        const lambda = v.lambda;
+        const max = Math.max(20, 5 / lambda);
+
+        for (let i = 0; i <= 60; i++) {
+
+            const t = i * max / 60;
+
+            puntos.push({
+                x: Number(t.toFixed(2)),
+                y: lambda * Math.exp(-lambda * t)
+            });
+        }
+
+    } else {
+
+        const mu = v.mu;
+        const sigma = v.sigma;
+
+        for (let i = 0; i <= 60; i++) {
+
+            const x = mu - 3.5 * sigma +
+                (7 * sigma * i / 60);
+
+            const z = (x - mu) / sigma;
+
+            puntos.push({
+                x: Number(x.toFixed(2)),
+                y: Math.exp(-0.5 * z * z) /
+                   (sigma * Math.sqrt(2 * Math.PI))
+            });
+        }
+    }
+
+    dibujarGrafica(puntos, "calc-grafico");
+}
+
+// -----------------------------------------------------
+// EVENTOS
+// -----------------------------------------------------
+
+elemento("calc-distribucion").addEventListener(
+    "change",
+    actualizarCalculadora
+);
+
+elemento("calc-operacion").addEventListener(
+    "change",
+    actualizarValoresCalc
+);
+
+elemento("calc-boton").addEventListener(
+    "click",
+    calcularGeneral
+);
+
+// Inicializar formulario
+
+actualizarCalculadora();
+
