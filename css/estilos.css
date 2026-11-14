@@ -459,3 +459,83 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+/* =====================================
+   CALCULADORA ESTADÍSTICA
+===================================== */
+
+#vista-calculadora {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+#vista-calculadora .panel {
+    margin-bottom: 24px;
+    padding: 28px;
+}
+
+#vista-calculadora h3 {
+    margin-top: 25px;
+    color: #172b4d;
+}
+
+.calc-select {
+    width: 100%;
+    padding: 13px;
+    margin-top: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
+    color: #1e293b;
+    font-size: 15px;
+}
+
+#calc-resultado {
+    margin-top: 20px;
+}
+
+.calc-respuesta {
+    background: #f0f6ff;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #c7d9ff;
+    margin-top: 15px;
+}
+
+.calc-respuesta strong {
+    display: block;
+    font-size: 32px;
+    color: #1d4ed8;
+    margin: 15px 0;
+}
+
+.calc-respuesta h4 {
+    margin-top: 0;
+}
+
+.calc-formula {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 12px 0;
+    font-family: Consolas, monospace;
+    overflow-wrap: anywhere;
+}
+
+#calc-valores {
+    margin-top: 20px;
+}
+
+@media (max-width: 800px) {
+    #vista-calculadora .panel {
+        padding: 18px;
+    }
+
+    .calc-respuesta strong {
+        font-size: 25px;
+    }
+}
+
+
