@@ -998,6 +998,56 @@ ejercicios.forEach(ejercicio => {
     tarjetas.appendChild(tarjeta);
 });
 
+
+// =====================================================
+// APARTADO INDEPENDIENTE DE DOCUMENTACIÓN
+// =====================================================
+
+// Crear botón debajo de los 8 ejercicios
+const botonDocumentacion = document.createElement("button");
+
+botonDocumentacion.type = "button";
+botonDocumentacion.className = "nav-btn nav-documentacion";
+botonDocumentacion.textContent = "📁 Documentación";
+botonDocumentacion.dataset.vista = "documentacion";
+
+menu.appendChild(botonDocumentacion);
+
+// Trasladar la documentación existente al nuevo apartado
+const panelDocumentacion = [
+    ...document.querySelectorAll("#inicio > .panel")
+].find(panel =>
+    panel.querySelector("h2")?.textContent.trim() ===
+    "Documentación del proyecto"
+);
+
+if (panelDocumentacion) {
+    elemento("documentacion-contenido")
+        .appendChild(panelDocumentacion);
+}
+
+// Abrir el apartado de documentación
+botonDocumentacion.addEventListener("click", () => {
+
+    elemento("inicio").classList.add("oculto");
+
+    elemento("vista-ejercicio").classList.add("oculto");
+
+    elemento("vista-documentacion")
+        .classList.remove("oculto");
+
+    document.querySelectorAll(".nav-btn").forEach(boton => {
+        boton.classList.toggle(
+            "activo",
+            boton === botonDocumentacion
+        );
+    });
+
+    window.scrollTo(0, 0);
+});
+
+
+
 // Menú lateral
 
 menu.addEventListener("click", evento => {
@@ -1029,6 +1079,7 @@ elemento("simular").addEventListener(
 
 function abrirEjercicio(id) {
     ejercicioActual = id;
+    elemento("vista-documentacion").classList.add("oculto");
 
     elemento("inicio").classList.toggle(
         "oculto",
